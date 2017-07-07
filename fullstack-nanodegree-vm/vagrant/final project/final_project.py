@@ -35,6 +35,9 @@ def show_restaurant_with_id(restaurant_id):
 	# Query the restaurant and its menu and render them with html
 	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
 	items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id).all()
+	for i in range(len(items)):
+		if not '$' in items[i].price:
+			items[i].price = '$' + items[i].price
 	return render_template('menu.html', items=items, restaurant=restaurant)
 
 
@@ -84,15 +87,55 @@ def delete_restaurant(restaurant_id):
 		return render_template('delete_restaurant.html', restaurant=restaurant)
 
 
-@app.route('/restaurants/<int:restaurant_id>/menu/new')
+@app.route('/restaurants/<int:restaurant_id>/menu/new', methods=['GET', 'POST'])
 def create_menu_item(restaurant_id):
-	return 'Here you create a menu item in restaurant with id ' + str(restaurant_id)
+	""" This method creates a new menu item in the specific restaurant's menu """
+
+	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+	if(request.method == 'POST'):
+		name = request.form['name']
+		description = request.form['description']
+		price = '$' + request.form['price']
+		course = request.form['course']
+		if len(name) == 0 or len(description) == 0 or len(price) == 1 or len(course) == 0:
+			pass
+		else:
+			new_item = MenuItem(name=name, course=course, description=description, price=price,\
+				restaurant_id=restaurant_id, restaurant=restaurant)
+			session.add(new_item)
+			session.commit()
+		return redirect(url_for('show_restaurant_with_id', restaurant_id=restaurant_id))
+	else:
+		return render_template('new_menu_item.html', restaurant=restaurant)
 
 
-@app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/edit')
+@app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/edit', methods=['GET', 'POST'])
 def edit_menu_item(restaurant_id, menu_id):
-	return 'Here you edit the menu item with id ' + str(menu_id) + ' in the restaurant with id '\
-		+ str(restaurant_id)
+	""" This method edits a menu item in a specific restaurant """
+
+	# See if it's a post method
+	# otherwise render the html to show the page
+	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+	item = session.query(MenuItem).filter_by(restaurant_id=restaurant_id, id=menu_id).one()
+	if request.method == 'POST':
+		name = request.form['name']
+		description = request.form['description']
+		price = '$' + request.form['price']
+		course = request.form['course']
+		if len(name) != 0:
+			item.name = name
+		if len(description) != 0:
+			item.description = description
+		if len(price) != 1:
+			item.price = price
+		if len(course) != 0:
+			item.course = course
+		session.add(item)
+		session.commit()
+		return redirect(url_for('show_restaurant_with_id', restaurant_id=restaurant_id))
+	else:
+		return render_template('edit_menu_item.html', restaurant=restaurant, item=item)
+	
 
 
 @app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/delete', methods=['GET', 'POST'])

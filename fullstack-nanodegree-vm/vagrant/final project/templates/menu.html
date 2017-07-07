@@ -3,6 +3,7 @@
 	
 	<head>
 		<title>Restaurant: {{restaurant.name}}</title>
+		<link rel="stylesheet" type="text/css" href="styles.css">
 	</head>
 
 	<body>
@@ -11,7 +12,7 @@
 		<a href='{{url_for("create_menu_item", restaurant_id=restaurant.id)}}'><p>Add new menu item<p></a>
 		{% for item in items %}
 
-			<div style='border-style: solid;border-color: red;padding: 10px;'>
+			<div>
 				<h3>{{item.name}}</h3>
 				<p>{{item.description}}</p>
 				<p>{{item.course}}</p>
